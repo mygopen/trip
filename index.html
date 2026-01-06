@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>首爾自由行小幫手 | Seoul Trip Assistant</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Only Noto Sans TC as requested -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f3f4f6;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* No scrollbar utility */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .app-shell {
+            max-width: 480px;
+            margin: 0 auto;
+            background: #ffffff;
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            padding-bottom: 80px;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 1.25rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #e5e7eb;
+            z-index: 0;
+        }
+
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Banner Styles */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .text-shadow {
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Tab Styling */
+        .tab-btn {
+            transition: all 0.2s ease;
+        }
+        .tab-active {
+            background-color: white;
+            color: #ec4899; /* pink-500 */
+            border: 2px solid #fce7f3; /* pink-100 */
+            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15);
+            transform: translateY(-2px);
+        }
+        .tab-inactive {
+            background-color: #f9fafb; /* gray-50 */
+            color: #9ca3af; /* gray-400 */
+            border: 1px solid transparent;
+        }
+
+        .nav-item-active { color: #ec4899; }
+        .nav-item-inactive { color: #9ca3af; }
+
+        /* Toast Notification */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 12px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 90px;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 100px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-shell flex flex-col">
+        
+        <!-- Header (Sticky) -->
+        <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="bg-pink-500 text-white p-1.5 rounded-lg shadow-sm">
+                    <i class="fa-solid fa-plane-departure"></i>
+                </div>
+                <h1 class="text-lg font-bold text-gray-800 tracking-wide">首爾自由行</h1>
+            </div>
+            <!-- Info Button -->
+            <button id="headerInfoBtn" onclick="toggleInfoModal()" class="text-gray-400 hover:text-pink-500 transition">
+                <i class="fa-solid fa-circle-info text-xl"></i>
+            </button>
+        </header>
+
+        <!-- Views Container -->
+        <div id="viewContainer" class="flex-1 relative">
+            
+            <!-- VIEW 1: Itinerary (行程) -->
+            <div id="view-itinerary" class="view-section fade-in">
+                <div id="itineraryBanner"></div>
+                <div class="sticky top-[60px] z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm pt-2 pb-2">
+                    <div class="flex overflow-x-auto no-scrollbar px-3 py-1 gap-2" id="dayTabs"></div>
+                </div>
+                <div class="p-4 pb-20" id="itineraryContent"></div>
+            </div>
+
+            <!-- VIEW 2: Guide (導覽) -->
+            <div id="view-guide" class="view-section hidden fade-in bg-gray-50 min-h-full p-4">
+                <div class="text-center mb-6 pt-4">
+                    <h2 class="text-2xl font-bold text-pink-500 mb-2">景點導覽</h2>
+                    <p class="text-sm text-gray-500">首爾必去熱門景點情報</p>
+                </div>
+                <div id="guideContent" class="space-y-6 pb-24"></div>
+            </div>
+
+            <!-- VIEW 3: Translation (翻譯) -->
+            <div id="view-translation" class="view-section hidden fade-in p-4 bg-gray-50 min-h-full">
+                <div class="text-center mb-6 pt-4">
+                    <h2 class="text-2xl font-bold text-pink-500 mb-2">旅遊翻譯</h2>
+                    <p class="text-sm text-gray-500">中文 · English · 한국어</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border-2 border-pink-100 mb-6 bg-gradient-to-br from-pink-50/50 to-blue-50/50">
+                    <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2 text-lg">
+                        <span class="text-2xl">✨</span> 即時翻譯
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm text-gray-500 mb-1 block">輸入中文</label>
+                            <textarea id="transInput" placeholder="請輸入想翻譯的中文..." class="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 min-h-[80px] resize-none"></textarea>
+                        </div>
+                        <button id="transBtn" onclick="handleRealTimeTranslate()" class="w-full bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold py-2.5 rounded-lg hover:opacity-90 transition flex items-center justify-center gap-2 shadow-sm active:scale-[0.98]">
+                            <span id="transBtnText">翻譯</span> <i id="transBtnIcon" class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <div id="transResults" class="hidden space-y-3 pt-3 border-t border-gray-200/50">
+                            <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                                <div class="text-xs text-gray-400 mb-1">English</div>
+                                <div id="resEn" class="text-sm text-gray-800 font-medium"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-pink-100 shadow-sm">
+                                <div class="text-xs text-pink-400 mb-1 flex items-center justify-between">
+                                    <span>한국어 (Korean)</span>
+                                    <button onclick="speakResult()" class="text-pink-500 hover:bg-pink-50 p-1.5 rounded transition"><i class="fa-solid fa-volume-high"></i></button>
+                                </div>
+                                <div id="resKo" class="text-sm text-pink-600 font-bold"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-7 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input id="phraseSearch" oninput="renderPhrases()" type="text" placeholder="搜尋常用對話..." class="w-full pl-10 bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:outline-none focus:border-pink-500 transition">
+                </div>
+                <div id="phraseContainer" class="space-y-6 pb-20"></div>
+            </div>
+
+            <!-- VIEW 4: Info (資訊) -->
+            <div id="view-info" class="view-section hidden fade-in bg-gray-50 min-h-full p-4">
+                <div class="text-center mb-6 pt-4">
+                    <h2 class="text-2xl font-bold text-pink-500 mb-2">實用資訊</h2>
+                    <p class="text-sm text-gray-500">天氣、緊急聯絡、旅遊須知</p>
+                </div>
+                
+                <div class="bg-white p-4 shadow-sm rounded-xl border-2 border-red-100 mb-4">
+                    <h3 class="font-bold text-gray-800 mb-4 text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-red-500"></i> 緊急聯絡電話 🚨
+                    </h3>
+                    <div class="grid grid-cols-1 gap-3" id="emergencyList"></div>
+                </div>
+
+                <div class="bg-white p-4 shadow-sm rounded-xl border-2 border-blue-100 mb-4">
+                    <h3 class="font-bold text-gray-800 mb-4 text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-cloud text-blue-500"></i> 天氣預報 ☁️
+                    </h3>
+                    <div class="space-y-3" id="weatherList"></div>
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <p class="text-sm text-blue-800">
+                            <strong>穿著建議：</strong>首爾2月平均氣溫 -3°C ~ 6°C，記得帶厚外套、圍巾和手套！
+                        </p>
+                    </div>
+                </div>
+
+                <div id="tipsList" class="space-y-4 mb-4"></div>
+
+                <div class="p-4 bg-gradient-to-br from-pink-50 to-purple-50 border border-pink-100 rounded-xl mb-4">
+                    <h3 class="font-bold text-gray-800 mb-3 text-lg">必備App 📱</h3>
+                    <div class="grid grid-cols-2 gap-3" id="appList"></div>
+                </div>
+
+                <div class="bg-white p-4 shadow-sm rounded-xl border-2 border-pink-100 mb-20">
+                    <h3 class="font-bold text-gray-800 mb-4 text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-map-pin text-pink-500"></i> 仁川機場 Smart Pass 出境教學 ✈️
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="bg-pink-50 p-3 rounded-lg">
+                            <h4 class="font-bold text-gray-800 mb-2">💡 什麼是 Smart Pass？</h4>
+                            <p class="text-sm text-gray-600 leading-relaxed">
+                                透過事先登記護照、臉部數據、機票等資訊，讓你在仁川機場出境時，只要透過人臉辨識就可以免去大排長龍，快速通關！
+                            </p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 mb-3">📱 登錄步驟</h4>
+                            <ol class="space-y-2" id="smartPassSteps"></ol>
+                        </div>
+                        <div id="smartPassFaq">
+                            <h4 class="font-bold text-gray-800 mb-3">❓ 常見問題</h4>
+                            <div class="space-y-2" id="faqList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 5: Accounting (記帳) -->
+            <div id="view-expense" class="view-section hidden fade-in bg-gray-50 min-h-full p-4">
+                <div class="text-center mb-6 pt-4">
+                    <h2 class="text-2xl font-bold text-pink-500 mb-2">旅遊記帳</h2>
+                    <p class="text-sm text-gray-500">匯率換算 & 消費記錄</p>
+                </div>
+                <div class="bg-white p-4 shadow-sm rounded-xl border-2 border-pink-100 mb-4">
+                    <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-pink-500"></i> 匯率設定
+                    </h3>
+                    <div class="flex items-center gap-3 bg-gray-50 p-2 rounded-lg">
+                        <span class="text-sm text-gray-500 whitespace-nowrap">1 KRW =</span>
+                        <input type="number" id="exchangeRateInput" step="0.0001" onchange="saveExchangeRate(this.value)" class="flex-1 bg-transparent border-none outline-none font-bold text-gray-800 text-center border-b border-gray-300 focus:border-pink-500" value="0.024">
+                        <span class="text-sm text-gray-500">TWD</span>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 shadow-sm rounded-xl border-2 border-indigo-100 mb-4">
+                    <h3 class="font-bold text-indigo-900 mb-3">快速計算機 🧮</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="calcInput" placeholder="輸入算式，例如：5000+3000*2" class="w-full bg-white border border-indigo-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        <button onclick="calculate()" class="w-full bg-indigo-500 text-white font-bold py-2 rounded-lg hover:bg-indigo-600 transition shadow-sm">計算 =</button>
+                        <div id="calcResultContainer" class="hidden bg-white rounded-lg p-3 text-center border border-indigo-100 shadow-sm">
+                            <div class="text-2xl font-bold text-indigo-600" id="calcResultKrw"></div>
+                            <div class="text-sm text-gray-500 mt-1" id="calcResultTwd"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-pink-500 to-rose-400 text-white p-5 rounded-xl shadow-lg mb-6 border border-pink-600">
+                    <h3 class="font-bold mb-3 text-lg flex items-center gap-2"><i class="fa-solid fa-sack-dollar"></i> 旅遊總花費</h3>
+                    <div class="grid grid-cols-2 gap-4 divide-x divide-pink-400/50">
+                        <div><div class="text-xs text-pink-100 opacity-90 mb-1">韓幣總額</div><div class="text-xl font-bold" id="totalKrwDisplay">₩0</div></div>
+                        <div class="pl-4"><div class="text-xs text-pink-100 opacity-90 mb-1">約台幣總額</div><div class="text-xl font-bold" id="totalTwdDisplay">NT$ 0</div></div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 shadow-sm rounded-xl border-2 border-gray-100 mb-6 relative">
+                    <h3 class="font-bold text-gray-800 mb-3">記一筆帳 ✏️</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="exName" placeholder="品項名稱（例如：午餐、咖啡）" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 focus:outline-none focus:border-pink-500 transition">
+                        <input type="number" id="exAmount" placeholder="韓幣金額" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 focus:outline-none focus:border-pink-500 transition">
+                        <div class="flex gap-2">
+                             <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoSelect(this)">
+                             <button onclick="document.getElementById('photoInput').click()" class="px-4 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 border border-gray-200 transition"><i class="fa-solid fa-camera"></i></button>
+                             <button onclick="handleAddExpense()" class="flex-1 bg-pink-500 text-white font-bold py-3 rounded-lg hover:bg-pink-600 shadow-md active:scale-[0.98] transition">新增</button>
+                        </div>
+                        <div id="imagePreviewContainer" class="hidden mt-2 relative inline-block">
+                            <img id="imagePreview" src="" class="h-20 w-20 object-cover rounded-lg border border-gray-200">
+                            <button onclick="clearPhoto()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-sm"><i class="fa-solid fa-times"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-3 pb-24">
+                    <div class="flex justify-between items-center px-1">
+                        <h3 class="font-bold text-gray-800">消費記錄 📝</h3>
+                        <button onclick="clearExpenses()" class="text-xs text-red-400 hover:text-red-600">清除全部</button>
+                    </div>
+                    <div id="expenseList" class="space-y-3"></div>
+                    <div id="emptyExpenseState" class="text-center py-10 text-gray-400 hidden bg-white rounded-xl border border-gray-100 border-dashed"><i class="fa-solid fa-receipt text-4xl mb-2 opacity-50"></i><p class="text-sm">還沒有記帳紀錄，開始記錄你的旅遊花費吧！</p></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 max-w-[480px] mx-auto safe-area-bottom">
+            <div class="flex justify-around items-center h-[60px]">
+                <button onclick="switchView('itinerary')" id="nav-itinerary" class="nav-item flex flex-col items-center justify-center w-full h-full text-xs font-medium nav-item-active">
+                    <i class="fa-solid fa-map-location-dot text-xl mb-1"></i>
+                    行程
+                </button>
+                <button onclick="switchView('guide')" id="nav-guide" class="nav-item flex flex-col items-center justify-center w-full h-full text-xs font-medium nav-item-inactive">
+                    <i class="fa-solid fa-map-signs text-xl mb-1"></i>
+                    導覽
+                </button>
+                <button onclick="switchView('translation')" id="nav-translation" class="nav-item flex flex-col items-center justify-center w-full h-full text-xs font-medium nav-item-inactive">
+                    <i class="fa-solid fa-language text-xl mb-1"></i>
+                    翻譯
+                </button>
+                <button onclick="switchView('info')" id="nav-info" class="nav-item flex flex-col items-center justify-center w-full h-full text-xs font-medium nav-item-inactive">
+                    <i class="fa-solid fa-circle-info text-xl mb-1"></i>
+                    資訊
+                </button>
+                <button onclick="switchView('expense')" id="nav-expense" class="nav-item flex flex-col items-center justify-center w-full h-full text-xs font-medium nav-item-inactive">
+                    <i class="fa-solid fa-wallet text-xl mb-1"></i>
+                    記帳
+                </button>
+            </div>
+        </nav>
+
+        <div id="toast"></div>
+
+    </div>
+
+    <!-- Modals -->
+    <div id="infoModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="toggleInfoModal()"></div>
+        <div class="relative bg-white rounded-2xl p-6 w-full max-w-sm mx-auto shadow-2xl">
+            <h3 class="text-xl font-bold mb-2">關於此 App</h3>
+            <p class="text-gray-600 text-sm mb-4">首爾自由行多功能助手 v5.0</p>
+            <ul class="text-xs text-gray-500 list-disc pl-4 space-y-1 mb-4">
+                <li>Day 7 包車費用資訊已更新。</li>
+                <li>全功能整合。</li>
+            </ul>
+            <button onclick="toggleInfoModal()" class="w-full bg-gray-800 text-white py-2 rounded-lg font-bold">關閉</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Global View Management ---
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('nav-item-active', 'text-pink-500');
+                el.classList.add('nav-item-inactive');
+            });
+            const activeNav = document.getElementById(`nav-${viewName}`);
+            activeNav.classList.remove('nav-item-inactive');
+            activeNav.classList.add('nav-item-active', 'text-pink-500');
+        }
+
+        // --- 2. Itinerary Logic ---
+        const itineraryData = [
+            { 
+                day: 1, title: "弘大散策", date: "1/31 (六)", dateShort: "01.31 (六)", dayNum: "31", location: "麻浦 / 弘大", temp: "-2°", weatherIcon: "fa-snowflake", 
+                bg: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/zvz04fztecclqqnjokjz.webp", 
+                events: [ 
+                    { 
+                        time: "10:30", title: "抵達仁川機場", desc: "領取 Wifi、T-money 卡", icon: "fa-plane-arrival", color: "bg-blue-500",
+                        thumb: "https://cf.creatrip.com/original/blog/2847/g6bsowcthdouk70n0ad7mhxp059dz15s.jpg?d=750&q=75&f=webp",
+                        searchUrl: "https://creatrip.com/blog/2847"
+                    },
+                    { 
+                        time: "13:00", title: "Check-in RYSE飯店", desc: "首爾麻浦區西橋洞", icon: "fa-hotel", color: "bg-indigo-500",
+                        thumb: "https://i.travelapi.com/lodging/90000000/89310000/89303600/89303597/ea931230_z.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+                        searchUrl: "https://www.klook.com/zh-TW/hotels/detail/426496-ryse-autograph-collection-seoul-by-marriott/" 
+                    },
+                    { 
+                        time: "15:00", title: "弘大商圈", desc: "飯店附近逛逛", icon: "fa-bag-shopping", color: "bg-pink-500",
+                        thumb: "https://res.klook.com/image/upload/fl_lossy.progressive,q_85/c_fill,w_1000/v1733909263/kv7f2asxlngpiwlzjqbm.webp",
+                        searchUrl: "https://www.klook.com/zh-TW/blog/hongdae/"
+                    },
+                    { 
+                        time: "17:00", title: "亂打秀", desc: "飯店走路3分鐘 ※行前先預約1/31 17:00場次", icon: "fa-masks-theater", color: "bg-purple-600", tag: "需預約",
+                        thumb: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/p9ri8entvc8myzwh8xi9.webp", // Nanta Updated
+                        searchUrl: "https://www.klook.com/zh-TW/activity/240-nanta-show-seoul/"
+                    },
+                    { 
+                        time: "19:00", title: "晚餐：鐵板雞", desc: "申美京弘大鐵板雞", icon: "fa-utensils", color: "bg-orange-500",
+                        thumb: "https://cf.creatrip.com/original/blog/12342/orhl5rqn9x4qabbmkma2gldhy56wyeh4.jpg?d=750&q=75&f=webp",
+                        searchUrl: "https://creatrip.com/zh-TW/blog/12342"
+                    },
+                    { 
+                        time: "22:00", title: "住宿：RYSE", desc: "RYSE, Autograph Collection", icon: "fa-bed", color: "bg-indigo-400",
+                        thumb: "https://i.travelapi.com/lodging/90000000/89310000/89303600/89303597/ea931230_z.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+                        searchUrl: "https://www.klook.com/zh-TW/hotels/detail/426496-ryse-autograph-collection-seoul-by-marriott/"
+                    }
+                ]
+            },
+            { 
+                day: 2, title: "傳統文化與首爾塔", date: "2/1 (日)", dateShort: "02.01 (日)", dayNum: "01", location: "鐘路 / 南山", temp: "0°", weatherIcon: "fa-cloud-sun", 
+                bg: "https://res.klook.com/image/upload/u_activities:xui9hudopofmrcgtfasl,h_1.0,ar_16:9,c_scale,e_blur:10000/w_1265,h_791,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/xui9hudopofmrcgtfasl.webp", 
+                events: [ 
+                    { 
+                        time: "10:30", title: "韓服體驗", desc: "西花韓服 ※行前先預約10:30", icon: "fa-shirt", color: "bg-pink-400", tag: "需預約",
+                        thumb: "https://res.klook.com/image/upload/w_1265,h_791,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/e9zmmlbqakylng8lingv.webp", // Seohwa
+                        searchUrl: "https://www.klook.com/zh-TW/activity/24844-seohwa-hanbok-rental-gyeongbokgung-seoul/?spm=SearchResult.SearchResult_LIST&clickId=7b5dfbc8d5" 
+                    },
+                    { 
+                        time: "11:30", title: "古宮巡禮", desc: "景福宮、北村韓屋村、三清洞", icon: "fa-landmark", color: "bg-yellow-600",
+                        thumb: "https://res.klook.com/image/upload/c_crop,h_1007,w_1611,x_0,y_19,z_0.4/w_1265,h_791,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/ta5jejbbj8rkrmxsrdos.webp", 
+                        searchUrl: "https://www.klook.com/zh-TW/activity/153150-gyeongbokgung-bukchon-gwangjang-market-walking-day-tour/"
+                    },
+                    { 
+                        time: "13:30", title: "午餐：蔘雞湯", desc: "土俗村蔘雞湯", icon: "fa-bowl-food", color: "bg-orange-500",
+                        thumb: "https://cf.creatrip.com/original/blog/4772/p44icgt1kc46fixn4nn7k85a01zra7yx.jpg?d=750&q=75&f=webp",
+                        searchUrl: "https://creatrip.com/zh-TW/blog/4772"
+                    },
+                    { 
+                        time: "16:00", title: "N 首爾塔", desc: "搭乘纜車上山看風景", icon: "fa-tower-broadcast", color: "bg-blue-700",
+                        thumb: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/js230hdcw5zvquv5x6na.webp",
+                        searchUrl: "https://www.klook.com/zh-TW/activity/412-n-seoul-tower-seoul/" 
+                    },
+                    { 
+                        time: "22:00", title: "住宿：RYSE", desc: "RYSE, Autograph Collection", icon: "fa-bed", color: "bg-indigo-400",
+                        thumb: "https://i.travelapi.com/lodging/90000000/89310000/89303600/89303597/ea931230_z.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+                        searchUrl: "https://www.klook.com/zh-TW/hotels/detail/426496-ryse-autograph-collection-seoul-by-marriott/"
+                    }
+                ]
+            },
+            { 
+                day: 3, title: "滑雪度假村 Day 1", date: "2/2 (一)", dateShort: "02.02 (一)", dayNum: "02", location: "江原道 / 洪川", temp: "-5°", weatherIcon: "fa-snowflake", 
+                bg: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/ml2k9oiugmqhp5sl3bti.webp", 
+                events: [ 
+                    { 
+                        time: "06:20", title: "集合出發", desc: "弘大站8號出口等巴士 (6:30發車)", icon: "fa-bus", color: "bg-red-500", tag: "AsiaYo團",
+                        thumb: "https://image-store.asiayo.com/bnb/45651/autoxauto/desc_U7eDNMshUjOcs3.webp",
+                        searchUrl: "https://asiayo.com/zh-tw/activity/54107/"
+                    },
+                    { 
+                        time: "10:00", title: "SKI 初級滑雪", desc: "滑雪教學 1小時、滑雪吊車", icon: "fa-person-skiing", color: "bg-cyan-500",
+                        thumb: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/ml2k9oiugmqhp5sl3bti.webp" // Ski
+                    },
+                    { 
+                        time: "15:00", title: "飯店入住", desc: "SONO 飯店入住 + 使用設施", icon: "fa-hotel", color: "bg-indigo-500",
+                        thumb: "https://i.travelapi.com/lodging/6000000/5710000/5702300/5702220/759949d5_z.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+                        searchUrl: "https://www.klook.com/zh-TW/hotels/detail/432091-vivaldipark/"
+                    },
+                    { 
+                        time: "19:00", title: "汗蒸幕", desc: "自費行程，放鬆身心", icon: "fa-hot-tub-person", color: "bg-orange-400",
+                        thumb: "https://s.yimg.com/ny/api/res/1.2/6mycv_1twUBo0W_2gtI6jQ--/YXBwaWQ9aGlnaGxhbmRlcjt3PTk2MDtoPTcxMTtjZj13ZWJw/https://media-mbst-pub-ue1.s3.amazonaws.com/creatr-uploaded-images/2020-01/36cdc5c0-36e4-11ea-bbbf-58455b855bd9",
+                        searchUrl: "https://tw.news.yahoo.com/%E9%9F%93%E5%9C%8B%E6%B4%AA%E5%B7%9D%E5%A4%A7%E6%98%8E%E7%B6%AD%E7%93%A6%E7%88%BE%E7%AC%AC%E5%85%AC%E5%9C%92%E6%B1%97%E8%92%B8%E5%B9%95%E6%8E%92%E6%AF%92%E7%BE%8E%E5%AE%B9%E5%85%BC%E7%99%82%E7%99%92-235917722.html"
+                    },
+                    { 
+                        time: "22:00", title: "住宿：SONO", desc: "SONO Hotel Vivaldi Park", icon: "fa-bed", color: "bg-indigo-400",
+                        thumb: "https://i.travelapi.com/lodging/6000000/5710000/5702300/5702220/759949d5_z.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+                        searchUrl: "https://www.klook.com/zh-TW/hotels/detail/432091-vivaldipark/"
+                    }
+                ]
+            },
+            { 
+                day: 4, title: "滑雪度假村 Day 2", date: "2/3 (二)", dateShort: "02.03 (二)", dayNum: "03", location: "洪川 / 明洞", temp: "-3°", weatherIcon: "fa-snowflake", 
+                bg: "https://res.klook.com/image/upload/w_1265,h_791,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/tidatjrzmqmnfeyxk7mp.webp", 
+                events: [ 
+                    { time: "10:00", title: "觀光纜車", desc: "欣賞雪景", icon: "fa-mountain", color: "bg-cyan-600",
+                        thumb: "https://image-store.asiayo.com/bnb/45651/autoxauto/desc_lyCwbFCBIgMzx9.webp",
+                        searchUrl: "https://asiayo.com/zh-tw/activity/45651/"
+                    },
+                    { 
+                        time: "13:00", title: "Snowy Land", desc: "冰雪樂園遊玩", icon: "fa-snowflake", color: "bg-blue-400",
+                        thumb: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/ml2k9oiugmqhp5sl3bti.webp" // Reuse Ski Resort image for Snowy Land
+                    },
+                    { time: "16:45", title: "回程巴士", desc: "準備返回首爾", icon: "fa-bus", color: "bg-gray-600",
+                        thumb: "https://asiayo.com/_next/image/?url=https%3A%2F%2Fimage-store.asiayo.com%2Fbnb%2F45651%2F960xauto%2Fdesc_XRhz4t9oMGoBxa.jpg&w=1080&q=75",
+                        searchUrl: "https://asiayo.com/zh-tw/activity/45651/"
+                    },
+                    { time: "19:30", title: "抵達明洞", desc: "乙支路入口站下車", icon: "fa-map-pin", color: "bg-red-500",
+                        thumb: "https://i2.wp.com/img.koreagaja.com/web_upload/dc31408b1af15a37cd7c61e10ca101e9.png",
+                        searchUrl: "https://travel.line.me/article/5470"
+                    },
+                    { 
+                        time: "20:00", title: "明洞商圈", desc: "晚餐與逛街", icon: "fa-bag-shopping", color: "bg-pink-500",
+                        thumb: "https://res.klook.com/image/upload/fl_lossy.progressive,q_85/c_fill,w_1000/v1728994482/cpi8vsl5elewldburrkn.webp", // Myeongdong Street
+                        searchUrl: "https://www.klook.com/zh-TW/blog/myeong-dong/"
+                    },
+                    { 
+                        time: "22:00", title: "住宿：Moxy", desc: "Moxy Seoul Myeongdong", icon: "fa-bed", color: "bg-indigo-400",
+                        thumb: "https://i.travelapi.com/lodging/90000000/89310000/89303600/89303597/ea931230_z.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+                        searchUrl: "https://www.klook.com/zh-TW/hotels/detail/1130730-moxy-seoul-myeongdong/"
+                    }
+                ]
+            },
+            { 
+                day: 5, title: "南大門與江南一日遊", date: "2/4 (三)", dateShort: "02.04 (三)", dayNum: "04", location: "明洞 / 江南", temp: "1°", weatherIcon: "fa-sun", 
+                bg: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/svpqsljlmysehtck8zbc.webp", // Starfield Library BG
+                events: [ 
+                    { 
+                        time: "09:00", title: "換錢", desc: "明洞大使館 或 Money Planet", icon: "fa-money-bill-wave", color: "bg-green-500" 
+                    },
+                    { 
+                        time: "09:30", title: "南大門市場", desc: "早餐、買小物 (車程約20分)", icon: "fa-store", color: "bg-orange-600",
+                        thumb: "https://cf.creatrip.com/original/blog/4710/zqqcr9akv56b3prwttru3nvozspk7k9g.jpg?d=750&q=75&f=webp",
+                        searchUrl: "https://creatrip.com/blog/4710"
+                    },
+                    { 
+                        time: "11:00", title: "COEX 星空圖書館", desc: "江南一日遊：網美打卡聖地", icon: "fa-book-open", color: "bg-yellow-600",
+                        thumb: "https://cf.creatrip.com/original/blog/4896/t6tldqnq22q0tfb4swb15q239f6a2fun.jpg?d=750&q=75&f=webp",
+                        searchUrl: "https://creatrip.com/blog/4896"
+                    },
+                    { 
+                        time: "12:00", title: "午餐：COEX地下街", desc: "在 Mall 內享用午餐", icon: "fa-utensils", color: "bg-orange-500"
+                    },
+                    { 
+                        time: "13:00", title: "COEX 水族館", desc: "室內水族館參觀", icon: "fa-fish", color: "bg-blue-500",
+                        thumb: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/svpqsljlmysehtck8zbc.webp", // Aquarium
+                        searchUrl: "https://www.klook.com/destination/p50108071-coex-aquarium/"
+                    },
+                    { 
+                        time: "15:30", title: "狎鷗亭 & 清潭洞", desc: "搭車前往：咖啡/街區/K-pop周邊", icon: "fa-coffee", color: "bg-purple-500",
+                        thumb: "https://img.bigfang.tw/2024/10/1728031461-e4bde0eb46b8f32ef4b4207f5344b4d4.jpg",
+                        searchUrl: "https://www.bigfang.tw/blog/post/apgujeong-heongdam-walking"
+                    },
+                    { 
+                        time: "17:30", title: "晚餐", desc: "江南/狎鷗亭周邊美食推薦", icon: "fa-utensils", color: "bg-orange-500" 
+                    },
+                    { 
+                        time: "18:30", title: "樂天超市 (首爾站)", desc: "前往採買 (停留約1小時)", icon: "fa-cart-shopping", color: "bg-green-600",
+                        thumb: "https://cf.creatrip.com/original/blog/2/nv7spodt3sfz4gqk5560usp7ure8kog0.jpg?d=750&q=75&f=webp",
+                        searchUrl: "https://creatrip.com/zh-TW/blog/2"
+                    },
+                    { 
+                        time: "22:00", title: "住宿：Moxy", desc: "Moxy Seoul Myeongdong", icon: "fa-bed", color: "bg-indigo-400",
+                        thumb: "https://i.travelapi.com/lodging/90000000/89310000/89303600/89303597/ea931230_z.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+                        searchUrl: "https://www.klook.com/zh-TW/hotels/detail/1130730-moxy-seoul-myeongdong/"
+                    }
+                ]
+            },
+            { 
+                day: 6, title: "樂天世界一日遊", date: "2/5 (四)", dateShort: "02.05 (四)", dayNum: "05", location: "松坡 / 首爾站", temp: "2°", weatherIcon: "fa-cloud", 
+                bg: "https://res.klook.com/image/upload/c_crop,h_1875,w_3000,x_0,y_49,z_0.3/w_1265,h_791,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/tlsbholhbdch17rrl0dm.webp", // Lotte World BG
+                events: [ 
+                    { 
+                        time: "10:00", title: "樂天世界", desc: "樂天世界室內外樂園一日遊", icon: "fa-ticket", color: "bg-red-500",
+                        thumb: "https://res.klook.com/image/upload/c_crop,h_1875,w_3000,x_0,y_49,z_0.3/w_1265,h_791,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/tlsbholhbdch17rrl0dm.webp", // Lotte World
+                        searchUrl: "https://www.klook.com/activity/136541-ultra-lotte-experience-tour/"
+                    },
+                    { 
+                        time: "18:00", title: "Seoul Sky", desc: "樂天世界塔觀景台 (視情況)", icon: "fa-building", color: "bg-blue-800",
+                        thumb: "https://cf.creatrip.com/original/blog/1422/ai5e7pqfsijjofg86aek7vrvkb6nn4al.jpg?d=750&q=75&f=webp",
+                        searchUrl: "https://creatrip.com/blog/1422"
+                    },
+                    { 
+                        time: "20:00", title: "樂天超市 (首爾站)", desc: "最後補貨採買", icon: "fa-cart-shopping", color: "bg-green-600",
+                        thumb: "https://cf.creatrip.com/original/blog/2/nv7spodt3sfz4gqk5560usp7ure8kog0.jpg?d=750&q=75&f=webp",
+                        searchUrl: "https://creatrip.com/zh-TW/blog/2"
+                    },
+                    { 
+                        time: "22:00", title: "住宿：Moxy", desc: "Moxy Seoul Myeongdong", icon: "fa-bed", color: "bg-indigo-400",
+                        thumb: "https://i.travelapi.com/lodging/90000000/89310000/89303600/89303597/ea931230_z.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+                        searchUrl: "https://www.klook.com/zh-TW/hotels/detail/1130730-moxy-seoul-myeongdong/"
+                    }
+                ]
+            },
+            { 
+                day: 7, title: "返程", date: "2/6 (五)", dateShort: "02.06 (五)", dayNum: "06", location: "仁川機場", temp: "3°", weatherIcon: "fa-sun", 
+                bg: "https://res.klook.com/image/upload/w_1265,h_791,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/eixbh8jkobcqoh17yw4d.webp", 
+                events: [ 
+                    { 
+                        time: "07:00", title: "包車前往機場", 
+                        desc: "Moxy 飯店門口集合<br>航班：BR169<br>共8位 / 8行李 / 2台車<br>費用：一台車 90000 韓幣 (現金)<br><span class='text-xs text-gray-500'>地址：Moxy Seoul Myeongdong 中區明洞 8na 街 38 號</span>", 
+                        icon: "fa-taxi", color: "bg-yellow-500",
+                        thumb: "https://res.klook.com/image/upload/w_1265,h_791,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/eixbh8jkobcqoh17yw4d.webp" // Airport Transfer
+                    },
+                    { time: "08:20", title: "抵達仁川機場", desc: "辦理登機 (BR169) 與退稅", icon: "fa-plane-departure", color: "bg-blue-500" }
+                ]
+            }
+        ];
+
+        let currentDay = 1;
+
+        function updateBannerClock() {
+            const clockEl = document.getElementById('bannerClock');
+            if (clockEl) {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                clockEl.innerText = `${hours}:${minutes}`;
+            }
+        }
+        setInterval(updateBannerClock, 1000);
+
+        function renderTabs() {
+            const tabsContainer = document.getElementById('dayTabs');
+            tabsContainer.innerHTML = '';
+            itineraryData.forEach(item => {
+                const btn = document.createElement('button');
+                const isActive = item.day === currentDay;
+                btn.className = `flex-none tab-btn w-[70px] h-[70px] rounded-xl flex flex-col items-center justify-center transition-all ${isActive ? 'tab-active' : 'tab-inactive'}`;
+                btn.innerHTML = `
+                    <div class="text-[10px] font-bold tracking-wider uppercase opacity-70">DAY ${item.day}</div>
+                    <div class="text-2xl font-bold font-mono leading-none mt-1">${item.dayNum}</div>
+                `;
+                btn.onclick = () => { currentDay = item.day; renderTabs(); renderItinerary(); };
+                tabsContainer.appendChild(btn);
+            });
+        }
+
+        function renderItinerary() {
+            const contentContainer = document.getElementById('itineraryContent');
+            const bannerContainer = document.getElementById('itineraryBanner');
+            const data = itineraryData.find(d => d.day === currentDay);
+            contentContainer.innerHTML = '';
+            if (!data) return;
+
+            bannerContainer.innerHTML = `
+                <div class="relative w-full h-[340px] overflow-hidden bg-gray-900 transition-all duration-500">
+                    <img src="${data.bg}" class="absolute w-full h-full object-cover opacity-80 animate-fade-in-up" alt="Banner">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30"></div>
+                    <div class="absolute inset-0 p-6 flex flex-col justify-between">
+                        <div class="flex justify-between items-start pt-2">
+                            <div class="text-white/60 text-xs font-medium tracking-[0.2em] uppercase pt-1">SEOUL TRIP</div>
+                            <div class="text-white font-medium text-lg tracking-wider text-shadow">${data.dateShort}</div>
+                            <div class="glass-card rounded-2xl p-2.5 text-center text-white min-w-[64px]">
+                                <div class="text-xl mb-0.5"><i class="fa-solid ${data.weatherIcon} ${data.weatherIcon === 'fa-sun' ? 'text-yellow-300' : 'text-white'}"></i></div>
+                                <div class="text-sm font-bold">${data.temp}</div>
+                            </div>
+                        </div>
+                        <div class="mt-auto pb-4">
+                            <div class="text-6xl font-bold text-white mb-2 tracking-tighter text-shadow" id="bannerClock">00:00</div>
+                            <div class="flex flex-wrap items-end gap-x-4 gap-y-1">
+                                <h2 class="text-2xl font-bold text-white leading-tight text-shadow">${data.title}</h2>
+                                <div class="text-white/90 text-sm flex items-center gap-1.5 font-medium bg-black/20 px-2 py-1 rounded-full backdrop-blur-sm border border-white/10">
+                                    <i class="fa-solid fa-location-dot text-pink-500"></i>
+                                    <span>${data.location}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            updateBannerClock();
+
+            const timelineWrapper = document.createElement('div');
+            timelineWrapper.className = "relative pb-4 mt-2";
+            const line = document.createElement('div');
+            line.className = "timeline-line";
+            timelineWrapper.appendChild(line);
+
+            data.events.forEach((event, index) => {
+                const eventEl = document.createElement('div');
+                eventEl.className = "relative pl-12 mb-8 fade-in";
+                eventEl.style.animationDelay = `${index * 0.1}s`;
+                
+                const tagHtml = event.tag ? `<span class="ml-2 inline-block px-2 py-0.5 bg-red-50 text-red-500 text-xs rounded-full font-bold border border-red-100">${event.tag}</span>` : '';
+                
+                // Dynamic Links
+                const query = encodeURIComponent(event.title + " 首爾");
+                // Use custom searchUrl if provided, otherwise use Google search
+                const searchUrl = event.searchUrl || `https://www.google.com/search?q=${query}`;
+                const mapUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+                const mapIcon = event.mapIcon || 'fa-map-location-dot';
+
+                eventEl.innerHTML = `
+                    <div class="absolute left-0 top-0 w-10 h-10 ${event.color} rounded-full flex items-center justify-center text-white shadow-lg z-10 border-4 border-white"><i class="fa-solid ${event.icon} text-sm"></i></div>
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 active:scale-[0.99] transition-transform">
+                        <div class="flex gap-4">
+                            <div class="flex-1">
+                                <!-- Top Row: Time + Buttons -->
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-md font-bold font-mono">${event.time}</span>
+                                    <div class="flex items-center gap-2">
+                                        <a href="${searchUrl}" target="_blank" class="text-[10px] px-2 py-0.5 rounded border border-pink-200 text-pink-500 bg-pink-50 flex items-center gap-1 hover:bg-pink-100 transition shadow-sm">
+                                            <i class="fa-solid fa-book-open"></i> 介紹
+                                        </a>
+                                        <a href="${mapUrl}" target="_blank" class="text-gray-400 hover:text-gray-600 transition p-1">
+                                            <i class="fa-solid ${mapIcon} text-lg"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Middle: Title -->
+                                <h3 class="text-lg font-bold text-gray-800 mb-1 flex flex-wrap items-center">
+                                    ${event.title} ${tagHtml}
+                                </h3>
+                                
+                                <!-- Bottom: Desc -->
+                                <p class="text-gray-600 text-sm leading-relaxed">${event.desc}</p>
+                            </div>
+                            
+                            <!-- Thumbnail -->
+                            ${event.thumb ? `<a href="${searchUrl}" target="_blank" class="flex-shrink-0"><img src="${event.thumb}" class="w-20 h-20 rounded-lg object-cover flex-shrink-0 border border-gray-100 self-center"></a>` : ''}
+                        </div>
+                    </div>`;
+                timelineWrapper.appendChild(eventEl);
+            });
+            contentContainer.appendChild(timelineWrapper);
+        }
+
+        // --- 3. Guide Logic (Updated with Google Maps Embed) ---
+        const guideData = [
+            { title: "景福宮", krName: "경복궁", tag: "歷史文化", desc: "朝鮮王朝五大宮殿之首，建於1395年，是首爾最具代表性的古蹟。", hours: "09:00 - 17:00 (週二公休)", price: "₩3,000 (穿韓服免費)", bestTime: "春秋季節、守門將交接時間", tips: ["建議租韓服拍照（穿韓服免門票）", "最佳拍照時間：上午9-11點光線最好"], query: "Gyeongbokgung Palace" },
+            { title: "北村韓屋村", krName: "북촌한옥마을", tag: "歷史文化", desc: "保留了朝鮮時代的傳統建築風格。", hours: "10:00 - 17:00 (週日休息)", price: "免費參觀", bestTime: "上午時段較為安靜", tips: ["此處為住宅區，請保持安靜", "坡度較陡，建議穿著舒適好走的鞋"], query: "Bukchon Hanok Village" },
+            { title: "南山首爾塔", krName: "N서울타워", tag: "地標景點", desc: "首爾的地標性建築，俯瞰首爾全景。", hours: "10:00 - 23:00", price: "展望台約 ₩21,000", bestTime: "黃昏至夜間", tips: ["建議搭乘南山纜車", "愛情鎖牆是情侶必去打卡點"], query: "N Seoul Tower" },
+            { title: "弘大商圈", krName: "홍대거리", tag: "購物娛樂", desc: "首爾最年輕、最具活力的商圈。", hours: "店家約 11:00 - 23:00", price: "免費", bestTime: "下午至深夜", tips: ["街頭表演文化盛行", "適合尋找平價時尚"], query: "Hongdae Shopping Street" },
+            { title: "明洞商圈", krName: "명동", tag: "購物美食", desc: "首爾代表性的購物天堂。", hours: "10:00 - 23:00", price: "免費", bestTime: "傍晚 17:00 後", tips: ["街邊小吃建議準備現金", "美妝保養品最齊全"], query: "Myeongdong Shopping Street" },
+            { title: "樂天世界", krName: "롯데월드", tag: "主題樂園", desc: "全球最大的室內主題樂園之一。", hours: "10:00 - 21:00", price: "成人約 ₩62,000", bestTime: "平日開園時", tips: ["建議下載 Magic Pass APP", "室內適合拍照"], query: "Lotte World" },
+            { title: "星空圖書館", krName: "별마당도서관", tag: "網美景點", desc: "位於 COEX Mall 內的巨型開放式圖書館。", hours: "10:30 - 22:00", price: "免費", bestTime: "早上剛開門或晚上點燈後", tips: ["位於 COEX Mall 地下一樓", "搭乘手扶梯時是最佳的拍攝角度"], query: "Starfield Library COEX" },
+            { title: "大明維瓦爾地", krName: "비발디파크", tag: "滑雪度假", desc: "距離首爾最近的大型滑雪度假村。", hours: "08:30 - 22:30", price: "依滑雪通票方案而定", bestTime: "12月至2月", tips: ["Snowy Land 適合親子", "建議參加一日團"], query: "Vivaldi Park Ski World" }
+        ];
+
+        function renderGuide() {
+            const container = document.getElementById('guideContent');
+            container.innerHTML = '';
+            guideData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100";
+                const tipsHtml = item.tips.map(tip => `<li class="flex items-start gap-2 text-sm text-gray-600 mb-1"><span class="text-blue-500 mt-1.5 text-[6px]"><i class="fa-solid fa-circle"></i></span><span class="flex-1">${tip}</span></li>`).join('');
+                card.innerHTML = `
+                    <div class="p-5">
+                        <div class="flex items-start justify-between mb-2">
+                            <div><h3 class="text-xl font-bold text-gray-800">${item.title} <span class="text-sm font-normal text-gray-400 ml-1">${item.krName}</span></h3></div>
+                            <span class="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-full font-bold whitespace-nowrap">${item.tag}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 leading-relaxed mb-4 text-justify">${item.desc}</p>
+                        <div class="bg-gray-50 rounded-xl p-4 grid gap-3 mb-4 border border-gray-100">
+                            <div class="flex items-start gap-3"><div class="w-5 flex justify-center mt-0.5"><i class="fa-regular fa-clock text-gray-400"></i></div><div><div class="text-xs text-gray-400 font-bold uppercase tracking-wider">開放時間</div><div class="text-sm font-medium text-gray-800">${item.hours}</div></div></div>
+                            <div class="flex items-start gap-3"><div class="w-5 flex justify-center mt-0.5"><i class="fa-solid fa-ticket text-gray-400"></i></div><div><div class="text-xs text-gray-400 font-bold uppercase tracking-wider">門票價格</div><div class="text-sm font-medium text-gray-800">${item.price}</div></div></div>
+                            <div class="flex items-start gap-3"><div class="w-5 flex justify-center mt-0.5"><i class="fa-regular fa-calendar-check text-gray-400"></i></div><div><div class="text-xs text-gray-400 font-bold uppercase tracking-wider">最佳參觀時間</div><div class="text-sm font-medium text-gray-800">${item.bestTime}</div></div></div>
+                        </div>
+                        
+                        <!-- Google Maps Embed -->
+                        <div class="relative h-48 rounded-xl overflow-hidden mb-4 shadow-inner bg-gray-100">
+                            <iframe 
+                                width="100%" 
+                                height="100%" 
+                                frameborder="0" 
+                                style="border:0" 
+                                src="https://maps.google.com/maps?q=${encodeURIComponent(item.query)}&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+
+                        <div class="bg-blue-50/50 rounded-xl p-4 border border-blue-100 mb-4">
+                            <div class="flex items-center gap-2 mb-2"><div class="w-2 h-2 rounded-full bg-blue-500"></div><h4 class="font-bold text-blue-600 text-sm">實用小提醒</h4></div>
+                            <ul class="">${tipsHtml}</ul>
+                        </div>
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.query)}" target="_blank" class="block w-full bg-pink-400 text-white text-center py-3 rounded-xl font-bold hover:bg-pink-500 transition shadow-sm active:scale-[0.98]"><i class="fa-solid fa-map-location-dot mr-1"></i> 在 Google Map 查看</a>
+                    </div>`;
+                container.appendChild(card);
+            });
+        }
+
+        // --- 4. Info Tab Logic ---
+        const emergencyContacts = [
+            { name: "警察", number: "112", icon: "fa-phone", color: "text-blue-600" },
+            { name: "消防/救護車", number: "119", icon: "fa-phone", color: "text-red-600" },
+            { name: "台北駐韓代表處", number: "+82-2-399-2767", icon: "fa-map-pin", color: "text-pink-500" },
+            { name: "外交部急難救助", number: "+886-800-085-095", icon: "fa-phone", color: "text-orange-600" }
+        ];
+        const weatherLinks = [
+            { name: "韓國氣象廳", url: "https://www.weather.go.kr/w/index.do", desc: "官方氣象資訊" },
+            { name: "首爾天氣預報", url: "https://www.accuweather.com/zh/kr/seoul/226081/weather-forecast/226081", desc: "AccuWeather 15天預報" }
+        ];
+        const travelTips = [
+            { title: "交通禮儀", items: ["地鐵博愛座不要坐（即使空位很多）", "手扶梯靠右站，左側留給趕時間的人", "地鐵上不要大聲講電話", "計程車後座要繫安全帶（有規定）"] },
+            { title: "用餐禮儀", items: ["年長者先動筷才能開始吃", "不要把筷子插在飯上（像祭拜）", "喝酒時要側身、用手遮", "小菜免費續，但不要浪費"] },
+            { title: "生活小常識", items: ["便利商店有熱水機可裝熱水", "大部分店家有免費Wi-Fi", "垃圾要分類，路上很少垃圾桶", "室內通常開很強的暖氣，洋蔥式穿法最好"] }
+        ];
+        const appRecommendations = [
+            { name: "Kakao Map", desc: "導航必備" }, { name: "Papago", desc: "翻譯神器" },
+            { name: "Kakao Talk", desc: "當地通訊" }, { name: "Subway Korea", desc: "地鐵查詢" }
+        ];
+        const smartPassSteps = [
+            "下載 Smart Pass App (iOS/Android)", "選擇語言（簡體中文）", "同意條款、進行信箱認證",
+            "設定快速密碼 (日後可用生物辨識)", "登錄護照與臉部 (需掃描晶片)", "登錄登機證/機票"
+        ];
+        const smartPassFaqs = [
+            { q: "兒童可以使用嗎？", a: "7歲以下無法使用，未滿14歲需監護人同意。" },
+            { q: "只有仁川機場可以使用嗎？", a: "是的，目前僅限仁川機場有 Smart Pass 標示的閘口。" },
+            { q: "下次離開韓國還能用嗎？", a: "護照與臉部資訊效期5年，但每次需重新登錄機票。" },
+            { q: "護照更換需重新登錄嗎？", a: "需要，請刪除App後重新註冊（可用同一信箱）。" },
+            { q: "Smart Pass 就是自動通關嗎？", a: "不是！Smart Pass 是出境前的人臉辨識，與海關自動通關（SeS）不同。" }
+        ];
+
+        function renderInfo() {
+            const emergencyList = document.getElementById('emergencyList');
+            if (emergencyList) {
+                emergencyList.innerHTML = emergencyContacts.map(c => `
+                    <a href="tel:${c.number}" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid ${c.icon} ${c.color} w-5 text-center"></i>
+                            <div><div class="font-bold text-gray-800">${c.name}</div><div class="text-sm text-gray-500">${c.number}</div></div>
+                        </div>
+                        <i class="fa-solid fa-phone text-gray-300"></i>
+                    </a>
+                `).join('');
+            }
+
+            const weatherList = document.getElementById('weatherList');
+            if (weatherList) {
+                weatherList.innerHTML = weatherLinks.map(l => `
+                    <a href="${l.url}" target="_blank" class="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-white rounded-lg hover:from-blue-100 hover:to-blue-50 transition-colors border border-blue-100">
+                        <div><div class="font-bold text-gray-800">${l.name}</div><div class="text-sm text-gray-500">${l.desc}</div></div>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-blue-400"></i>
+                    </a>
+                `).join('');
+            }
+
+            const tipsList = document.getElementById('tipsList');
+            if (tipsList) {
+                tipsList.innerHTML = travelTips.map(t => `
+                    <div class="p-4 shadow-sm rounded-xl border-2 border-gray-100 bg-white">
+                        <h3 class="font-bold text-gray-800 mb-3 text-lg">${t.title}</h3>
+                        <ul class="space-y-2">
+                            ${t.items.map(i => `<li class="flex items-start gap-3 text-sm text-gray-600"><span class="text-pink-500 font-bold mt-0.5">•</span><span class="flex-1">${i}</span></li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('');
+            }
+
+            const appList = document.getElementById('appList');
+            if (appList) {
+                appList.innerHTML = appRecommendations.map(a => `
+                    <div class="bg-white p-3 rounded-lg text-center shadow-sm border border-white/50">
+                        <div class="font-bold text-gray-800 text-sm">${a.name}</div>
+                        <div class="text-xs text-gray-500 mt-1">${a.desc}</div>
+                    </div>
+                `).join('');
+            }
+
+            // Smart Pass Steps
+            const spSteps = document.getElementById('smartPassSteps');
+            if (spSteps) {
+                spSteps.innerHTML = smartPassSteps.map((s, i) => `
+                    <li class="flex items-start gap-3 text-sm text-gray-600">
+                        <span class="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white flex items-center justify-center text-xs font-bold">${i + 1}</span>
+                        <div><span class="font-bold text-gray-800">${s}</span></div>
+                    </li>
+                `).join('');
+            }
+
+            // Smart Pass FAQ
+            const faqList = document.getElementById('faqList');
+            if (faqList) {
+                faqList.innerHTML = smartPassFaqs.map(f => `
+                    <details class="bg-gray-50 rounded-lg p-3 group">
+                        <summary class="font-bold text-sm text-gray-800 cursor-pointer list-none flex justify-between items-center">
+                            ${f.q}
+                            <i class="fa-solid fa-chevron-down text-gray-400 group-open:rotate-180 transition-transform"></i>
+                        </summary>
+                        <p class="text-sm text-gray-600 mt-2 pl-2 border-l-2 border-pink-200">${f.a}</p>
+                    </details>
+                `).join('');
+            }
+        }
+
+        // --- 5. Translation Logic (RESTORED) ---
+        const translatePhrases = [
+            { category: "基本問候", items: [ { zh: "你好", en: "Hello", ko: "안녕하세요", roman: "Annyeonghaseyo" }, { zh: "謝謝", en: "Thank you", ko: "感謝합니다", roman: "Gamsahamnida" }, { zh: "不好意思", en: "Excuse me", ko: "죄송합니다", roman: "Joesonghamnida" } ] },
+            { category: "購物", items: [ { zh: "多少錢？", en: "How much?", ko: "얼마예요?", roman: "Eolmayeyo?" }, { zh: "太貴了", en: "Too expensive", ko: "너무 비싸요", roman: "Neomu bissayo" }, { zh: "便宜一點", en: "Discount please", ko: "깎아 주세요", roman: "Kkakka juseyo" } ] },
+            { category: "餐廳", items: [ { zh: "菜單", en: "Menu", ko: "메뉴판", roman: "Menupan" }, { zh: "我要點餐", en: "Order please", ko: "주문할게요", roman: "Jumunhalgeyo" }, { zh: "結帳", en: "Check please", ko: "계산할게요", roman: "Gyesanhalgeyo" } ] },
+            { category: "滑雪常用", items: [ { zh: "滑雪", en: "Ski", ko: "스키", roman: "Seuki" }, { zh: "纜車", en: "Gondola", ko: "곤돌라", roman: "Gondolla" }, { zh: "好冷", en: "So cold", ko: "너무 추워요", roman: "Neomu chuwoyo" } ] }
+        ];
+
+        async function handleRealTimeTranslate() {
+            const inputText = document.getElementById('transInput').value.trim();
+            const btn = document.getElementById('transBtn');
+            const resultsDiv = document.getElementById('transResults');
+            if (!inputText) return;
+            btn.disabled = true;
+            try {
+                const koResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(inputText)}&langpair=zh-TW|ko`);
+                const koData = await koResponse.json();
+                const enResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(inputText)}&langpair=zh-TW|en`);
+                const enData = await enResponse.json();
+                document.getElementById('resKo').innerText = koData.responseData.translatedText;
+                document.getElementById('resEn').innerText = enData.responseData.translatedText;
+                resultsDiv.classList.remove('hidden');
+            } catch {
+                showToast("翻譯失敗，請稍後再試");
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function renderPhrases() {
+            const searchInput = document.getElementById('phraseSearch');
+            if (!searchInput) return;
+            const searchTerm = searchInput.value.toLowerCase();
+            const container = document.getElementById('phraseContainer');
+            container.innerHTML = '';
+            
+            const filteredData = translatePhrases.map(cat => ({ 
+                ...cat, 
+                items: cat.items.filter(item => item.zh.includes(searchTerm) || item.en.toLowerCase().includes(searchTerm)) 
+            })).filter(cat => cat.items.length > 0);
+            
+            if (filteredData.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 mt-10">找不到相關結果</div>`;
+                return;
+            }
+
+            filteredData.forEach(cat => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-xl shadow-sm border-2 border-pink-50/50";
+                card.innerHTML = `<h3 class="font-bold text-gray-800 mb-2 text-lg">${cat.category}</h3>`;
+                const list = document.createElement('div');
+                list.className = "space-y-2";
+                cat.items.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = "p-2 bg-gray-50 rounded-lg flex justify-between items-center";
+                    row.innerHTML = `<div class="flex-1"><div class="font-bold">${item.zh}</div><div class="text-xs text-gray-400">${item.en}</div><div class="text-pink-600 font-bold">${item.ko}</div></div><button onclick="speak('${item.ko}')" class="text-pink-400 p-2"><i class="fa-solid fa-volume-high"></i></button>`;
+                    list.appendChild(row);
+                });
+                card.appendChild(list);
+                container.appendChild(card);
+            });
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = "ko-KR";
+                window.speechSynthesis.speak(utterance);
+            } else {
+                showToast("瀏覽器不支援發音");
+            }
+        }
+        function speakResult() {
+             const text = document.getElementById('resKo').innerText;
+             if(text) speak(text);
+        }
+
+        // --- 6. Expense Tracker Logic (RESTORED) ---
+        let expenses = [];
+        let exchangeRate = 0.024;
+        let currentPhoto = null;
+
+        function initExpenseView() {
+            const savedExpenses = localStorage.getItem("travel-expenses");
+            const savedRate = localStorage.getItem("exchange-rate");
+            if (savedExpenses) expenses = JSON.parse(savedExpenses);
+            if (savedRate) {
+                exchangeRate = parseFloat(savedRate);
+                const rateInput = document.getElementById('exchangeRateInput');
+                if (rateInput) rateInput.value = exchangeRate;
+            }
+            renderExpenses();
+        }
+
+        function saveExchangeRate(val) {
+            exchangeRate = parseFloat(val) || 0.024;
+            localStorage.setItem("exchange-rate", exchangeRate.toString());
+            renderExpenses(); 
+            showToast("匯率已更新！");
+        }
+
+        function calculate() {
+            const input = document.getElementById('calcInput').value;
+            if (!input) return;
+            try {
+                const safeInput = input.replace(/[^0-9+\-*/.()]/g, "");
+                const result = new Function('return ' + safeInput)();
+                document.getElementById('calcResultKrw').innerText = `₩${result.toLocaleString()}`;
+                document.getElementById('calcResultTwd').innerText = `約 NT$ ${Math.round(result * exchangeRate).toLocaleString()}`;
+                document.getElementById('calcResultContainer').classList.remove('hidden');
+                showToast("計算完成");
+            } catch (e) {
+                showToast("算式格式錯誤");
+            }
+        }
+
+        function handlePhotoSelect(input) {
+            if (input.files && input.files[0]) {
+                compressImage(input.files[0]).then(base64 => {
+                    currentPhoto = base64;
+                    document.getElementById('imagePreview').src = base64;
+                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                }).catch(() => showToast("照片處理失敗"));
+            }
+        }
+
+        function clearPhoto() {
+            currentPhoto = null;
+            document.getElementById('photoInput').value = '';
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+        }
+
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 400;
+                        const MAX_HEIGHT = 400;
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    };
+                    img.onerror = reject;
+                };
+                reader.onerror = reject;
+            });
+        }
+
+        function handleAddExpense() {
+            const name = document.getElementById('exName').value;
+            const amountStr = document.getElementById('exAmount').value;
+            if (!name || !amountStr) {
+                showToast("請輸入名稱和金額");
+                return;
+            }
+            const krw = parseFloat(amountStr);
+            const newExpense = {
+                id: Date.now().toString(),
+                item: name,
+                krw: krw,
+                photo: currentPhoto,
+                date: new Date().toLocaleString("zh-TW", { month: 'numeric', day: 'numeric', hour: '2-digit', minute:'2-digit' })
+            };
+            expenses.unshift(newExpense);
+            localStorage.setItem("travel-expenses", JSON.stringify(expenses));
+            document.getElementById('exName').value = '';
+            document.getElementById('exAmount').value = '';
+            clearPhoto();
+            renderExpenses();
+            showToast("記帳成功！");
+        }
+
+        function deleteExpense(id) {
+            if(confirm('確定要刪除嗎？')) {
+                expenses = expenses.filter(e => e.id !== id);
+                localStorage.setItem("travel-expenses", JSON.stringify(expenses));
+                renderExpenses();
+                showToast("已刪除");
+            }
+        }
+
+        function clearExpenses() {
+            if(confirm('確定要清空所有資料嗎？')) {
+                expenses = [];
+                localStorage.removeItem("travel-expenses");
+                renderExpenses();
+                showToast("資料已清空");
+            }
+        }
+
+        function renderExpenses() {
+            const listEl = document.getElementById('expenseList');
+            const emptyEl = document.getElementById('emptyExpenseState');
+            if (!listEl || !emptyEl) return;
+
+            const totalKrw = expenses.reduce((sum, item) => sum + item.krw, 0);
+            const totalTwd = Math.round(totalKrw * exchangeRate);
+            
+            const totalKrwEl = document.getElementById('totalKrwDisplay');
+            const totalTwdEl = document.getElementById('totalTwdDisplay');
+            if (totalKrwEl) totalKrwEl.innerText = `₩${totalKrw.toLocaleString()}`;
+            if (totalTwdEl) totalTwdEl.innerText = `NT$ ${totalTwd.toLocaleString()}`;
+
+            if (expenses.length === 0) {
+                emptyEl.classList.remove('hidden');
+                listEl.innerHTML = '';
+            } else {
+                emptyEl.classList.add('hidden');
+                listEl.innerHTML = expenses.map(item => {
+                    const itemTwd = Math.round(item.krw * exchangeRate);
+                    return `
+                        <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex gap-3 animate-fade-in-up">
+                            ${item.photo ? `<img src="${item.photo}" class="w-16 h-16 rounded-lg object-cover border border-gray-100 flex-shrink-0">` : 
+                                `<div class="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0"><i class="fa-solid fa-receipt text-xl"></i></div>`}
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-bold text-gray-800 truncate">${item.item}</h4>
+                                    <button onclick="deleteExpense('${item.id}')" class="text-gray-300 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button>
+                                </div>
+                                <div class="text-pink-500 font-bold mt-1">₩${item.krw.toLocaleString()}</div>
+                                <div class="flex justify-between items-end mt-1">
+                                    <div class="text-xs text-gray-500">約 NT$ ${itemTwd}</div>
+                                    <div class="text-xs text-gray-300">${item.date}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            if (toast) {
+                toast.className = "show";
+                toast.innerText = message;
+                setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+            }
+        }
+
+        function toggleInfoModal() {
+            document.getElementById('infoModal').classList.toggle('hidden');
+        }
+
+        // --- Init ---
+        // Ensure DOM is fully loaded before rendering
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTabs();
+            renderItinerary();
+            renderGuide();
+            renderPhrases();
+            renderInfo();
+            initExpenseView();
+        });
+
+    </script>
+</body>
+</html>
