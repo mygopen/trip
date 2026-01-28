@@ -676,7 +676,7 @@
                 const query = encodeURIComponent(event.title + " 首爾");
                 // Use custom searchUrl if provided, otherwise use Google search
                 const searchUrl = event.searchUrl || `https://www.google.com/search?q=${query}`;
-                const mapUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+                const mapUrl = `https://www.google.com/maps/search/?api=1&query=${query}`; // Fixed mapUrl
                 const mapIcon = event.mapIcon || 'fa-map-location-dot';
 
                 eventEl.innerHTML = `
@@ -730,6 +730,14 @@
                 const card = document.createElement('div');
                 card.className = "bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100";
                 const tipsHtml = item.tips.map(tip => `<li class="flex items-start gap-2 text-sm text-gray-600 mb-1"><span class="text-blue-500 mt-1.5 text-[6px]"><i class="fa-solid fa-circle"></i></span><span class="flex-1">${tip}</span></li>`).join('');
+                
+                // Fix Google Maps URLs
+                const googleSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.query)}`;
+                const googleEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(item.query)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+                
+                // Create Naver Map URL using the Korean Name
+                const naverMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.krName)}`;
+
                 card.innerHTML = `
                     <div class="p-5">
                         <div class="flex items-start justify-between mb-2">
@@ -749,7 +757,7 @@
                                 height="100%" 
                                 frameborder="0" 
                                 style="border:0" 
-                                src="https://maps.google.com/maps?q=${encodeURIComponent(item.query)}&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                                src="${googleEmbedUrl}" 
                                 allowfullscreen>
                             </iframe>
                         </div>
@@ -758,7 +766,13 @@
                             <div class="flex items-center gap-2 mb-2"><div class="w-2 h-2 rounded-full bg-blue-500"></div><h4 class="font-bold text-blue-600 text-sm">實用小提醒</h4></div>
                             <ul class="">${tipsHtml}</ul>
                         </div>
-                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.query)}" target="_blank" class="block w-full bg-pink-400 text-white text-center py-3 rounded-xl font-bold hover:bg-pink-500 transition shadow-sm active:scale-[0.98]"><i class="fa-solid fa-map-location-dot mr-1"></i> 在 Google Map 查看</a>
+                        <a href="${googleSearchUrl}" target="_blank" class="block w-full bg-pink-400 text-white text-center py-3 rounded-xl font-bold hover:bg-pink-500 transition shadow-sm active:scale-[0.98]">
+                            <i class="fa-solid fa-map-location-dot mr-1"></i> 在 Google Map 查看
+                        </a>
+                        
+                        <a href="${naverMapUrl}" target="_blank" class="block w-full bg-[#03C75A] text-white text-center py-3 rounded-xl font-bold hover:bg-[#02b351] transition shadow-sm active:scale-[0.98] mt-3">
+                            <i class="fa-solid fa-location-dot mr-1"></i> 在 Naver Map 查看
+                        </a>
                     </div>`;
                 container.appendChild(card);
             });
