@@ -234,8 +234,8 @@
 
             <div id="view-expense" class="view-section hidden fade-in bg-gray-50 min-h-full p-4">
                 <div class="text-center mb-6 pt-4">
-                    <h2 class="text-2xl font-bold text-pink-500 mb-2">旅遊記帳</h2>
-                    <p class="text-sm text-gray-500">匯率換算 & 消費記錄</p>
+                    <h2 class="text-2xl font-bold text-pink-500 mb-2">旅遊算錢</h2>
+                    <p class="text-sm text-gray-500">匯率換算 & 快速計算</p>
                 </div>
                 
                 <div class="bg-white p-4 shadow-sm rounded-xl border-2 border-pink-100 mb-4">
@@ -284,38 +284,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="bg-gradient-to-r from-pink-500 to-rose-400 text-white p-5 rounded-xl shadow-lg mb-6 border border-pink-600">
-                    <h3 class="font-bold mb-3 text-lg flex items-center gap-2"><i class="fa-solid fa-sack-dollar"></i> 旅遊總花費</h3>
-                    <div class="grid grid-cols-2 gap-4 divide-x divide-pink-400/50">
-                        <div><div class="text-xs text-pink-100 opacity-90 mb-1">韓幣總額</div><div class="text-xl font-bold" id="totalKrwDisplay">₩0</div></div>
-                        <div class="pl-4"><div class="text-xs text-pink-100 opacity-90 mb-1">約台幣總額</div><div class="text-xl font-bold" id="totalTwdDisplay">NT$ 0</div></div>
-                    </div>
-                </div>
-                <div class="bg-white p-4 shadow-sm rounded-xl border-2 border-gray-100 mb-6 relative">
-                    <h3 class="font-bold text-gray-800 mb-3">記一筆帳 ✏️</h3>
-                    <div class="space-y-3">
-                        <input type="text" id="exName" placeholder="品項名稱（例如：午餐、咖啡）" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 focus:outline-none focus:border-pink-500 transition">
-                        <input type="number" id="exAmount" placeholder="韓幣金額" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 focus:outline-none focus:border-pink-500 transition">
-                        <div class="flex gap-2">
-                             <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoSelect(this)">
-                             <button onclick="document.getElementById('photoInput').click()" class="px-4 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 border border-gray-200 transition"><i class="fa-solid fa-camera"></i></button>
-                             <button onclick="handleAddExpense()" class="flex-1 bg-pink-500 text-white font-bold py-3 rounded-lg hover:bg-pink-600 shadow-md active:scale-[0.98] transition">新增</button>
-                        </div>
-                        <div id="imagePreviewContainer" class="hidden mt-2 relative inline-block">
-                            <img id="imagePreview" src="" class="h-20 w-20 object-cover rounded-lg border border-gray-200">
-                            <button onclick="clearPhoto()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-sm"><i class="fa-solid fa-times"></i></button>
-                        </div>
-                    </div>
-                </div>
-                <div class="space-y-3 pb-24">
-                    <div class="flex justify-between items-center px-1">
-                        <h3 class="font-bold text-gray-800">消費記錄 📝</h3>
-                        <button onclick="clearExpenses()" class="text-xs text-red-400 hover:text-red-600">清除全部</button>
-                    </div>
-                    <div id="expenseList" class="space-y-3"></div>
-                    <div id="emptyExpenseState" class="text-center py-10 text-gray-400 hidden bg-white rounded-xl border border-gray-100 border-dashed"><i class="fa-solid fa-receipt text-4xl mb-2 opacity-50"></i><p class="text-sm">還沒有記帳紀錄，開始記錄你的旅遊花費吧！</p></div>
-                </div>
             </div>
 
         </div>
@@ -340,7 +308,7 @@
                 </button>
                 <button onclick="switchView('expense')" id="nav-expense" class="nav-item flex flex-col items-center justify-center w-full h-full text-xs font-medium nav-item-inactive">
                     <i class="fa-solid fa-wallet text-xl mb-1"></i>
-                    記帳
+                    算錢
                 </button>
             </div>
         </nav>
@@ -984,20 +952,20 @@
         }
 
         // --- 6. Expense Tracker Logic (UPDATED) ---
-        let expenses = [];
+        // let expenses = []; // Removed
         let exchangeRate = 0.024;
-        let currentPhoto = null;
+        // let currentPhoto = null; // Removed
 
         function initExpenseView() {
-            const savedExpenses = localStorage.getItem("travel-expenses");
+            // const savedExpenses = localStorage.getItem("travel-expenses"); // Removed
             const savedRate = localStorage.getItem("exchange-rate");
-            if (savedExpenses) expenses = JSON.parse(savedExpenses);
+            // if (savedExpenses) expenses = JSON.parse(savedExpenses); // Removed
             if (savedRate) {
                 exchangeRate = parseFloat(savedRate);
                 const rateInput = document.getElementById('exchangeRateInput');
                 if (rateInput) rateInput.value = exchangeRate;
             }
-            renderExpenses();
+            // renderExpenses(); // Removed
         }
 
         // --- 新增：即時匯率更新 ---
@@ -1036,7 +1004,7 @@
         function saveExchangeRate(val) {
             exchangeRate = parseFloat(val) || 0.024;
             localStorage.setItem("exchange-rate", exchangeRate.toString());
-            renderExpenses(); 
+            // renderExpenses(); // Removed
             // 如果計算機結果有開著，更新一下計算結果
             if(!document.getElementById('calcResultContainer').classList.contains('hidden')){
                 calculate();
@@ -1081,135 +1049,6 @@
                 
             } catch (e) {
                 showToast("算式格式錯誤");
-            }
-        }
-
-        function handlePhotoSelect(input) {
-            if (input.files && input.files[0]) {
-                compressImage(input.files[0]).then(base64 => {
-                    currentPhoto = base64;
-                    document.getElementById('imagePreview').src = base64;
-                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
-                }).catch(() => showToast("照片處理失敗"));
-            }
-        }
-
-        function clearPhoto() {
-            currentPhoto = null;
-            document.getElementById('photoInput').value = '';
-            document.getElementById('imagePreviewContainer').classList.add('hidden');
-        }
-
-        function compressImage(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 400;
-                        const MAX_HEIGHT = 400;
-                        let width = img.width;
-                        let height = img.height;
-                        if (width > height) {
-                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                        } else {
-                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    };
-                    img.onerror = reject;
-                };
-                reader.onerror = reject;
-            });
-        }
-
-        function handleAddExpense() {
-            const name = document.getElementById('exName').value;
-            const amountStr = document.getElementById('exAmount').value;
-            if (!name || !amountStr) {
-                showToast("請輸入名稱和金額");
-                return;
-            }
-            const krw = parseFloat(amountStr);
-            const newExpense = {
-                id: Date.now().toString(),
-                item: name,
-                krw: krw,
-                photo: currentPhoto,
-                date: new Date().toLocaleString("zh-TW", { month: 'numeric', day: 'numeric', hour: '2-digit', minute:'2-digit' })
-            };
-            expenses.unshift(newExpense);
-            localStorage.setItem("travel-expenses", JSON.stringify(expenses));
-            document.getElementById('exName').value = '';
-            document.getElementById('exAmount').value = '';
-            clearPhoto();
-            renderExpenses();
-            showToast("記帳成功！");
-        }
-
-        function deleteExpense(id) {
-            if(confirm('確定要刪除嗎？')) {
-                expenses = expenses.filter(e => e.id !== id);
-                localStorage.setItem("travel-expenses", JSON.stringify(expenses));
-                renderExpenses();
-                showToast("已刪除");
-            }
-        }
-
-        function clearExpenses() {
-            if(confirm('確定要清空所有資料嗎？')) {
-                expenses = [];
-                localStorage.removeItem("travel-expenses");
-                renderExpenses();
-                showToast("資料已清空");
-            }
-        }
-
-        function renderExpenses() {
-            const listEl = document.getElementById('expenseList');
-            const emptyEl = document.getElementById('emptyExpenseState');
-            if (!listEl || !emptyEl) return;
-
-            const totalKrw = expenses.reduce((sum, item) => sum + item.krw, 0);
-            const totalTwd = Math.round(totalKrw * exchangeRate);
-            
-            const totalKrwEl = document.getElementById('totalKrwDisplay');
-            const totalTwdEl = document.getElementById('totalTwdDisplay');
-            if (totalKrwEl) totalKrwEl.innerText = `₩${totalKrw.toLocaleString()}`;
-            if (totalTwdEl) totalTwdEl.innerText = `NT$ ${totalTwd.toLocaleString()}`;
-
-            if (expenses.length === 0) {
-                emptyEl.classList.remove('hidden');
-                listEl.innerHTML = '';
-            } else {
-                emptyEl.classList.add('hidden');
-                listEl.innerHTML = expenses.map(item => {
-                    const itemTwd = Math.round(item.krw * exchangeRate);
-                    return `
-                        <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex gap-3 animate-fade-in-up">
-                            ${item.photo ? `<img src="${item.photo}" class="w-16 h-16 rounded-lg object-cover border border-gray-100 flex-shrink-0">` : 
-                                `<div class="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0"><i class="fa-solid fa-receipt text-xl"></i></div>`}
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-start">
-                                    <h4 class="font-bold text-gray-800 truncate">${item.item}</h4>
-                                    <button onclick="deleteExpense('${item.id}')" class="text-gray-300 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button>
-                                </div>
-                                <div class="text-pink-500 font-bold mt-1">₩${item.krw.toLocaleString()}</div>
-                                <div class="flex justify-between items-end mt-1">
-                                    <div class="text-xs text-gray-500">約 NT$ ${itemTwd}</div>
-                                    <div class="text-xs text-gray-300">${item.date}</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
             }
         }
 
