@@ -379,7 +379,7 @@
         }
 
         // --- 2. Itinerary Logic ---
-        // Updated with daily AccuWeather links for Feb 2026
+        // Updated with daily AccuWeather links for Feb 2026 and CSV Data
         const itineraryData = [
             { 
                 day: 1, title: "弘大散策", date: "1/31 (六)", dateShort: "01.31 (六)", dayNum: "31", location: "麻浦 / 弘大", temp: "-2°", weatherIcon: "fa-snowflake", 
@@ -387,22 +387,26 @@
                 weatherUrl: "https://www.accuweather.com/zh/kr/seoul/226081/daily-weather-forecast/226081?day=31&month=1&year=2026", 
                 events: [ 
                     { 
-                        time: "10:30", title: "抵達仁川機場", desc: "領取 Wifi、T-money 卡", icon: "fa-plane-arrival", color: "bg-blue-500",
+                        time: "10:30", title: "抵達仁川機場", desc: "BR170/BR146 抵達，11:20 1F CU集合、午餐(超商)、買T-money", icon: "fa-plane-arrival", color: "bg-blue-500",
                         thumb: "https://cf.creatrip.com/original/blog/2847/g6bsowcthdouk70n0ad7mhxp059dz15s.jpg?d=750&q=75&f=webp",
                         searchUrl: "https://creatrip.com/blog/2847"
                     },
+                     { 
+                        time: "12:30", title: "搭乘機場巴士", desc: "搭 #6002 往西橋洞/弘大", icon: "fa-bus", color: "bg-green-500",
+                        thumb: "https://res.klook.com/image/upload/v1605777016/blog/y8l1k2w5l4a1w5w6z6z5.jpg"
+                    },
                     { 
-                        time: "13:00", title: "Check-in RYSE飯店", desc: "首爾麻浦區西橋洞", icon: "fa-hotel", color: "bg-indigo-500",
+                        time: "15:00", title: "Check-in RYSE飯店", desc: "首爾麻浦區西橋洞，櫃台在3F", icon: "fa-hotel", color: "bg-indigo-500",
                         thumb: "https://i.travelapi.com/lodging/90000000/89310000/89303600/89303597/ea931230_z.jpg?impolicy=resizecrop&rw=1200&ra=fit",
                         searchUrl: "https://www.klook.com/zh-TW/hotels/detail/426496-ryse-autograph-collection-seoul-by-marriott/" 
                     },
                     { 
-                        time: "15:00", title: "弘大商圈", desc: "飯店附近逛逛", icon: "fa-bag-shopping", color: "bg-pink-500",
+                        time: "15:30", title: "弘大換錢與下午茶", desc: "弘大旅遊DEPOT換錢，下午茶：自然島鹽麵包", icon: "fa-money-bill-wave", color: "bg-yellow-500",
                         thumb: "https://res.klook.com/image/upload/fl_lossy.progressive,q_85/c_fill,w_1000/v1733909263/kv7f2asxlngpiwlzjqbm.webp",
                         searchUrl: "https://www.klook.com/zh-TW/blog/hongdae/"
                     },
                     { 
-                        time: "17:00", title: "亂打秀", desc: "飯店走路3分鐘 ※行前先預約1/31 17:00場次", icon: "fa-masks-theater", color: "bg-purple-600", tag: "需預約",
+                        time: "17:00", title: "亂打秀", desc: "飯店走路3分鐘 ※KKDAY預約 17:00場次", icon: "fa-masks-theater", color: "bg-purple-600", tag: "需預約",
                         thumb: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/p9ri8entvc8myzwh8xi9.webp", // Nanta Updated
                         searchUrl: "https://www.klook.com/zh-TW/activity/240-nanta-show-seoul/"
                     },
@@ -410,6 +414,9 @@
                         time: "19:00", title: "晚餐：鐵板雞", desc: "申美京弘大鐵板雞", icon: "fa-utensils", color: "bg-orange-500",
                         thumb: "https://cf.creatrip.com/original/blog/12342/orhl5rqn9x4qabbmkma2gldhy56wyeh4.jpg?d=750&q=75&f=webp",
                         searchUrl: "https://creatrip.com/zh-TW/blog/12342"
+                    },
+                     { 
+                        time: "20:30", title: "Harmony超市", desc: "弘大店採買 (滿3萬可退稅)", icon: "fa-cart-shopping", color: "bg-green-600"
                     },
                     { 
                         time: "22:00", title: "住宿：RYSE", desc: "RYSE, Autograph Collection", icon: "fa-bed", color: "bg-indigo-400",
@@ -424,12 +431,12 @@
                 weatherUrl: "https://www.accuweather.com/zh/kr/seoul/226081/daily-weather-forecast/226081?day=1&month=2&year=2026",
                 events: [ 
                     { 
-                        time: "10:30", title: "韓服體驗", desc: "西花韓服 ※行前先預約10:30", icon: "fa-shirt", color: "bg-pink-400", tag: "需預約",
+                        time: "10:30", title: "韓服體驗", desc: "西花韓服 ※KKDAY預約10:30 (10:20到)", icon: "fa-shirt", color: "bg-pink-400", tag: "需預約",
                         thumb: "https://res.klook.com/image/upload/w_1265,h_791,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/e9zmmlbqakylng8lingv.webp", // Seohwa
                         searchUrl: "https://www.klook.com/zh-TW/activity/24844-seohwa-hanbok-rental-gyeongbokgung-seoul/?spm=SearchResult.SearchResult_LIST&clickId=7b5dfbc8d5" 
                     },
                     { 
-                        time: "11:30", title: "古宮巡禮", desc: "景福宮、北村韓屋村、三清洞", icon: "fa-landmark", color: "bg-yellow-600",
+                        time: "11:30", title: "古宮巡禮", desc: "景福宮(免門票)、北村韓屋村、三清洞", icon: "fa-landmark", color: "bg-yellow-600",
                         thumb: "https://res.klook.com/image/upload/c_crop,h_1007,w_1611,x_0,y_19,z_0.4/w_1265,h_791,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/ta5jejbbj8rkrmxsrdos.webp", 
                         searchUrl: "https://www.klook.com/zh-TW/activity/153150-gyeongbokgung-bukchon-gwangjang-market-walking-day-tour/"
                     },
@@ -438,10 +445,16 @@
                         thumb: "https://cf.creatrip.com/original/blog/4772/p44icgt1kc46fixn4nn7k85a01zra7yx.jpg?d=750&q=75&f=webp",
                         searchUrl: "https://creatrip.com/zh-TW/blog/4772"
                     },
+                     { 
+                        time: "14:00", title: "下午茶：炸雞", desc: "孝道炸雞 (Hyodo Chicken) 光化門店", icon: "fa-drumstick-bite", color: "bg-orange-400"
+                    },
                     { 
-                        time: "16:00", title: "N 首爾塔", desc: "搭乘纜車上山看風景", icon: "fa-tower-broadcast", color: "bg-blue-700",
+                        time: "14:30", title: "N 首爾塔", desc: "南山纜車+首爾塔夜景+愛情鎖", icon: "fa-tower-broadcast", color: "bg-blue-700",
                         thumb: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/js230hdcw5zvquv5x6na.webp",
                         searchUrl: "https://www.klook.com/zh-TW/activity/412-n-seoul-tower-seoul/" 
+                    },
+                     { 
+                        time: "19:00", title: "晚餐：弘大", desc: "胖胖豬夾肉 或 興夫家部隊鍋", icon: "fa-utensils", color: "bg-orange-500"
                     },
                     { 
                         time: "22:00", title: "住宿：RYSE", desc: "RYSE, Autograph Collection", icon: "fa-bed", color: "bg-indigo-400",
@@ -456,16 +469,16 @@
                 weatherUrl: "https://www.accuweather.com/zh/kr/seoul/226081/daily-weather-forecast/226081?day=2&month=2&year=2026",
                 events: [ 
                     { 
-                        time: "06:20", title: "集合出發", desc: "弘大站8號出口等巴士 (6:30發車)", icon: "fa-bus", color: "bg-red-500", tag: "AsiaYo團",
+                        time: "06:20", title: "集合出發", desc: "弘大站8號出口等巴士 (找紅色旗子)", icon: "fa-bus", color: "bg-red-500", tag: "AsiaYo團",
                         thumb: "https://image-store.asiayo.com/bnb/45651/autoxauto/desc_U7eDNMshUjOcs3.webp",
                         searchUrl: "https://asiayo.com/zh-tw/activity/54107/"
                     },
                     { 
-                        time: "10:00", title: "SKI 初級滑雪", desc: "滑雪教學 1小時、滑雪吊車", icon: "fa-person-skiing", color: "bg-cyan-500",
+                        time: "10:30", title: "SKI 初級滑雪", desc: "滑雪教學 1小時、滑雪吊車", icon: "fa-person-skiing", color: "bg-cyan-500",
                         thumb: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/ml2k9oiugmqhp5sl3bti.webp" // Ski
                     },
                     { 
-                        time: "15:00", title: "飯店入住", desc: "SONO 飯店入住 + 使用設施", icon: "fa-hotel", color: "bg-indigo-500",
+                        time: "16:00", title: "飯店入住", desc: "SONO 飯店入住 + 使用設施", icon: "fa-hotel", color: "bg-indigo-500",
                         thumb: "https://i.travelapi.com/lodging/6000000/5710000/5702300/5702220/759949d5_z.jpg?impolicy=resizecrop&rw=1200&ra=fit",
                         searchUrl: "https://www.klook.com/zh-TW/hotels/detail/432091-vivaldipark/"
                     },
@@ -503,7 +516,7 @@
                         searchUrl: "https://travel.line.me/article/5470"
                     },
                     { 
-                        time: "20:00", title: "明洞商圈", desc: "晚餐與逛街", icon: "fa-bag-shopping", color: "bg-pink-500",
+                        time: "20:00", title: "明洞商圈", desc: "晚餐：明洞夜市、換錢", icon: "fa-bag-shopping", color: "bg-pink-500",
                         thumb: "https://res.klook.com/image/upload/fl_lossy.progressive,q_85/c_fill,w_1000/v1728994482/cpi8vsl5elewldburrkn.webp", // Myeongdong Street
                         searchUrl: "https://www.klook.com/zh-TW/blog/myeong-dong/"
                     },
@@ -520,9 +533,6 @@
                 weatherUrl: "https://www.accuweather.com/zh/kr/seoul/226081/daily-weather-forecast/226081?day=4&month=2&year=2026",
                 events: [ 
                     { 
-                        time: "09:00", title: "換錢", desc: "明洞大使館 或 Money Planet", icon: "fa-money-bill-wave", color: "bg-green-500" 
-                    },
-                    { 
                         time: "09:30", title: "南大門市場", desc: "早餐、買小物 (車程約20分)", icon: "fa-store", color: "bg-orange-600",
                         thumb: "https://cf.creatrip.com/original/blog/4710/zqqcr9akv56b3prwttru3nvozspk7k9g.jpg?d=750&q=75&f=webp",
                         searchUrl: "https://creatrip.com/blog/4710"
@@ -536,22 +546,25 @@
                         time: "12:00", title: "午餐：COEX地下街", desc: "在 Mall 內享用午餐", icon: "fa-utensils", color: "bg-orange-500"
                     },
                     { 
-                        time: "13:00", title: "COEX 水族館", desc: "室內水族館參觀", icon: "fa-fish", color: "bg-blue-500",
+                        time: "13:30", title: "COEX 水族館", desc: "室內水族館參觀", icon: "fa-fish", color: "bg-blue-500",
                         thumb: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/svpqsljlmysehtck8zbc.webp", // Aquarium
                         searchUrl: "https://www.klook.com/destination/p50108071-coex-aquarium/"
                     },
                     { 
-                        time: "15:30", title: "狎鷗亭 & 清潭洞", desc: "搭車前往：咖啡/街區/K-pop周邊", icon: "fa-coffee", color: "bg-purple-500",
+                        time: "15:30", title: "狎鷗亭 & 清潭洞", desc: "咖啡/街區/K-pop周邊 (London Bagel Museum)", icon: "fa-coffee", color: "bg-purple-500",
                         thumb: "https://img.bigfang.tw/2024/10/1728031461-e4bde0eb46b8f32ef4b4207f5344b4d4.jpg",
                         searchUrl: "https://www.bigfang.tw/blog/post/apgujeong-heongdam-walking"
                     },
                     { 
-                        time: "17:30", title: "晚餐", desc: "江南/狎鷗亭周邊美食推薦", icon: "fa-utensils", color: "bg-orange-500" 
+                        time: "18:00", title: "晚餐：馬鈴薯排骨湯", desc: "龍山元祖馬鈴薯排骨湯 (24小時)", icon: "fa-utensils", color: "bg-orange-500" 
                     },
                     { 
-                        time: "18:30", title: "樂天超市 (首爾站)", desc: "前往採買 (停留約1小時)", icon: "fa-cart-shopping", color: "bg-green-600",
+                        time: "19:00", title: "樂天超市 (首爾站)", desc: "前往採買 (停留約1小時)", icon: "fa-cart-shopping", color: "bg-green-600",
                         thumb: "https://cf.creatrip.com/original/blog/2/nv7spodt3sfz4gqk5560usp7ure8kog0.jpg?d=750&q=75&f=webp",
                         searchUrl: "https://creatrip.com/zh-TW/blog/2"
+                    },
+                    { 
+                        time: "21:00", title: "明洞 New Era", desc: "帽子潮T店逛逛", icon: "fa-shirt", color: "bg-blue-800"
                     },
                     { 
                         time: "22:00", title: "住宿：Moxy", desc: "Moxy Seoul Myeongdong", icon: "fa-bed", color: "bg-indigo-400",
@@ -571,14 +584,12 @@
                         searchUrl: "https://www.klook.com/activity/136541-ultra-lotte-experience-tour/"
                     },
                     { 
-                        time: "18:00", title: "Seoul Sky", desc: "樂天世界塔觀景台 (視情況)", icon: "fa-building", color: "bg-blue-800",
+                        time: "17:30", title: "Seoul Sky", desc: "樂天世界塔觀景台 (視情況)", icon: "fa-building", color: "bg-blue-800",
                         thumb: "https://cf.creatrip.com/original/blog/1422/ai5e7pqfsijjofg86aek7vrvkb6nn4al.jpg?d=750&q=75&f=webp",
                         searchUrl: "https://creatrip.com/blog/1422"
                     },
                     { 
-                        time: "20:00", title: "樂天超市 (首爾站)", desc: "最後補貨採買", icon: "fa-cart-shopping", color: "bg-green-600",
-                        thumb: "https://cf.creatrip.com/original/blog/2/nv7spodt3sfz4gqk5560usp7ure8kog0.jpg?d=750&q=75&f=webp",
-                        searchUrl: "https://creatrip.com/zh-TW/blog/2"
+                        time: "20:00", title: "晚餐/補貨", desc: "晚餐或樂天超市最後補貨", icon: "fa-utensils", color: "bg-green-600"
                     },
                     { 
                         time: "22:00", title: "住宿：Moxy", desc: "Moxy Seoul Myeongdong", icon: "fa-bed", color: "bg-indigo-400",
@@ -594,11 +605,11 @@
                 events: [ 
                     { 
                         time: "07:00", title: "包車前往機場", 
-                        desc: "Moxy 飯店門口集合<br>航班：BR169<br>共8位 / 8行李 / 2台車<br>費用：一台車 90000 韓幣 (現金)<br><span class='text-xs text-gray-500'>地址：Moxy Seoul Myeongdong 中區明洞 8na 街 38 號</span>", 
+                        desc: "Moxy 飯店門口集合<br>航班：BR169 (11:40) / BR145 (11:45)<br>共8位 / 8行李 / 2台車<br>費用：一台車 90000 韓幣 (現金)<br><span class='text-xs text-gray-500'>地址：Moxy Seoul Myeongdong 中區明洞 8na 街 38 號</span>", 
                         icon: "fa-taxi", color: "bg-yellow-500",
                         thumb: "https://res.klook.com/image/upload/w_1265,h_791,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/eixbh8jkobcqoh17yw4d.webp" // Airport Transfer
                     },
-                    { time: "08:20", title: "抵達仁川機場", desc: "辦理登機 (BR169) 與退稅", icon: "fa-plane-departure", color: "bg-blue-500" }
+                    { time: "08:30", title: "抵達仁川機場", desc: "辦理登機與退稅", icon: "fa-plane-departure", color: "bg-blue-500" }
                 ]
             }
         ];
