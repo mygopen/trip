@@ -810,6 +810,7 @@
 
                 const googleQuery = event.googleQuery || event.title;
                 const googleMapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(googleQuery)}`;
+                const imgUrl = event.thumb || "https://www.salon.com/app/uploads/2025/06/Kpop-demon-hunters-netflix-02.jpg";
 
                 eventEl.innerHTML = `
                     <div class="absolute left-0 top-0 w-10 h-10 ${event.color} rounded-full flex items-center justify-center text-white shadow-lg z-10 border-4 border-white"><i class="fa-solid ${event.icon} text-sm"></i></div>
@@ -840,7 +841,7 @@
                                 <p class="text-gray-600 text-sm leading-relaxed">${event.desc}</p>
                             </div>
                             
-                            ${event.thumb ? `<a href="${searchUrl}" target="_blank" class="flex-shrink-0"><img src="${event.thumb}" class="w-20 h-20 rounded-lg object-cover flex-shrink-0 border border-gray-100 self-center"></a>` : ''}
+                            <a href="${searchUrl}" target="_blank" class="flex-shrink-0"><img src="${imgUrl}" class="w-20 h-20 rounded-lg object-cover flex-shrink-0 border border-gray-100 self-center"></a>
                         </div>
                     </div>`;
                 timelineWrapper.appendChild(eventEl);
